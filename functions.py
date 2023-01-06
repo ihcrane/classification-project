@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[11]:
+# In[106]:
 
 
 import pandas as pd
@@ -21,7 +21,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 
 
-# In[12]:
+# In[107]:
 
 
 def telco_prep(df):
@@ -35,14 +35,13 @@ def telco_prep(df):
     return df
 
 
-# In[14]:
+# In[108]:
 
 
 telco = telco_prep('df')
-telco.head()
 
 
-# In[19]:
+# In[109]:
 
 
 def chi2(column, df):
@@ -56,13 +55,7 @@ def chi2(column, df):
 # Does not include payments yet, have to drop na and make a seperate test below
 
 
-# In[20]:
-
-
-chi2('contract_type_id', telco)
-
-
-# In[21]:
+# In[110]:
 
 
 def t_test(column, df):
@@ -77,13 +70,7 @@ def t_test(column, df):
 # The code will print the results in a similar format to the chi2 test above
 
 
-# In[22]:
-
-
-t_test('monthly_charges', telco)
-
-
-# In[28]:
+# In[111]:
 
 
 def split_data(df, target):
@@ -102,19 +89,13 @@ def split_data(df, target):
 # Creating splits for the data using custom libraray function
 
 
-# In[29]:
+# In[112]:
 
 
-train, validate, test, X_train, y_train, X_val, y_val, X_test, y_test = split_data(telco, 'churn')
+train, val, test, X_train, y_train, X_val, y_val, X_test, y_test = split_data(telco, 'churn')
 
 
-# In[30]:
-
-
-train.head()
-
-
-# In[35]:
+# In[113]:
 
 
 def contract_plot(df, x, hue):
@@ -122,13 +103,7 @@ def contract_plot(df, x, hue):
 # count plot for contract_type hued by churn to visualize churn for each contract type
 
 
-# In[36]:
-
-
-contract_plot(train, 'contract_type', 'churn')
-
-
-# In[40]:
+# In[114]:
 
 
 def dependents_plot(df, x, hue):
@@ -136,13 +111,7 @@ def dependents_plot(df, x, hue):
 # Countplot for dependents hued by churn
 
 
-# In[41]:
-
-
-dependents_plot(train, 'dependents', 'churn')
-
-
-# In[37]:
+# In[115]:
 
 
 def payment_plot(df, y, hue):
@@ -150,13 +119,7 @@ def payment_plot(df, y, hue):
 # Count plot visualizes payment_type and count of churn for each payment type
 
 
-# In[38]:
-
-
-payment_plot(train, 'payment_type', 'churn')
-
-
-# In[47]:
+# In[116]:
 
 
 def monthly_charges_hist(df, target, column, color1, color2, alpha1, alpha2, edgecolor, label1, label2, xlabel, ylabel, title):
@@ -171,28 +134,21 @@ def monthly_charges_hist(df, target, column, color1, color2, alpha1, alpha2, edg
     plt.show()
 
 
-# In[48]:
+# In[117]:
 
 
-monthly_charges_hist(train, 'churn', 'monthly_charges', 'red', 'blue', 
-                      .5, .1, 'black', 'churned', 'did not churn', 'Monthly Charges', 
-                     'Amount of Customers', 'Churn Based on Monthly Charges')
+def change_int(df, column):
+    df[column] = np.where(df[column] == 'Yes', 1, 0)
+    return df[column]
 
 
-# In[49]:
+# In[118]:
 
 
-def change_int(df, parameter):
-    df[parameter] = np.where(df[parameter] == 'Yes', 1, 0)
+telco['dependents'] = change_int(telco, 'dependents')
 
 
-# In[52]:
-
-
-change_int(telco, 'dependents')
-
-
-# In[50]:
+# In[119]:
 
 
 def drop_cols(df, drop1, drop2, ax):
@@ -200,19 +156,13 @@ def drop_cols(df, drop1, drop2, ax):
     return df
 
 
-# In[53]:
+# In[120]:
 
 
-telco2 = drop_cols(telco, 'contract_type', 'payment_type', 1)
+telco = drop_cols(telco, 'payment_type', 'contract_type', 1)
 
 
-# In[54]:
-
-
-train, validate, test, X_train, y_train, X_val, y_val, X_test, y_test = split_data(telco2, 'churn')
-
-
-# In[55]:
+# In[121]:
 
 
 def baseline(df, target):
@@ -220,13 +170,13 @@ def baseline(df, target):
     return baseline
 
 
-# In[56]:
+# In[122]:
 
 
-baseline(telco, 'churn')
+train, val, test, X_train, y_train, X_val, y_val, X_test, y_test = split_data(telco, 'churn')
 
 
-# In[78]:
+# In[123]:
 
 
 def dec_tree(x, y, depth):
@@ -238,63 +188,39 @@ def dec_tree(x, y, depth):
     return train_tree
 
 
-# In[79]:
-
-
-dec_tree(X_train, y_train, 6)
-
-
-# In[59]:
+# In[124]:
 
 
 def tree_score(x,y,depth):
-    train_tree = DecisionTreeClassifier(max_depth= depth, random_state=77)
+    train_tree = DecisionTreeClassifier(max_depth= depth, random_state=42)
     train_tree.fit(X_train, y_train)
     train_tree.score(x,y)
     return train_tree.score(x,y)
 
 
-# In[60]:
-
-
-tree_score(X_test, y_test, 7)
-
-
-# In[80]:
+# In[125]:
 
 
 def tree_matrix(x, y, depth):
     train_tree = DecisionTreeClassifier(max_depth= depth, random_state=42)
-    train_tree.fit(x, y)
+    train_tree.fit(X_train, y_train)
     pred = train_tree.predict(x)
     labels = sorted(y.unique())
     df = pd.DataFrame(confusion_matrix(y, pred), index=labels, columns=labels)
     return df
 
 
-# In[81]:
-
-
-tree_matrix(X_train, y_train, 6)
-
-
-# In[82]:
+# In[126]:
 
 
 def tree_report(x, y, depth):
     train_tree = DecisionTreeClassifier(max_depth= depth, random_state=42)
-    train_tree.fit(x, y)
+    train_tree.fit(X_train, y_train)
     pred = train_tree.predict(x)
     print(classification_report(y, pred))
 
 
-# In[83]:
-
-
-tree_report(X_train, y_train, 6)
-
-
-# In[84]:
+# In[127]:
 
 
 def rfc_score(x, y, depth):
@@ -311,12 +237,6 @@ def rfc_score(x, y, depth):
     return rf.score(x, y)
 
 
-# In[85]:
-
-
-rfc_score(X_train, y_train, 7)
-
-
 # In[86]:
 
 
@@ -327,18 +247,12 @@ def rfc_matrix(x, y, depth):
                             min_samples_leaf=3,
                             n_estimators=100,
                             max_depth=depth, 
-                            random_state=77)
-    rf.fit(x, y)
+                            random_state=42)
+    rf.fit(X_train, y_train)
     pred = rf.predict(x)
     labels = sorted(y.unique())
     df = pd.DataFrame(confusion_matrix(y, pred), index=labels, columns=labels)
     return df
-
-
-# In[77]:
-
-
-rfc_matrix(X_train, y_train, 6)
 
 
 # In[88]:
@@ -352,15 +266,9 @@ def rfc_report(x, y, depth):
                             n_estimators=100,
                             max_depth=depth, 
                             random_state=42)
-    rf.fit(x, y)
+    rf.fit(X_train, y_train)
     pred = rf.predict(x)
     print(classification_report(y, pred))
-
-
-# In[89]:
-
-
-rfc_report(X_train, y_train, 6)
 
 
 # In[91]:
@@ -368,16 +276,10 @@ rfc_report(X_train, y_train, 6)
 
 def log_reg_score(x, y, c):
     logit = LogisticRegression(C= c, random_state=42, intercept_scaling=1, solver='lbfgs')
-    logit.fit(x, y)
+    logit.fit(X_train, y_train)
     pred = logit.predict(x)
     logit.score(x, y)
     return logit.score(x, y)
-
-
-# In[92]:
-
-
-log_reg_score(X_train, y_train, 1)
 
 
 # In[93]:
@@ -385,17 +287,11 @@ log_reg_score(X_train, y_train, 1)
 
 def log_matrix(x, y, c):
     logit = LogisticRegression(C= c, random_state=42, intercept_scaling=1, solver='lbfgs')
-    logit.fit(x, y)
+    logit.fit(X_train, y_train)
     pred = logit.predict(x)
     labels = sorted(y.unique())
     df = pd.DataFrame(confusion_matrix(y, pred), index=labels, columns=labels)
     return df
-
-
-# In[94]:
-
-
-log_matrix(X_train, y_train, 1)
 
 
 # In[97]:
@@ -403,15 +299,9 @@ log_matrix(X_train, y_train, 1)
 
 def log_report(x, y, c):
     logit = LogisticRegression(C= c, random_state=42, intercept_scaling=1, solver='lbfgs')
-    logit.fit(x, y)
+    logit.fit(X_train, y_train)
     pred = logit.predict(x)
     print(classification_report(y, pred))
-
-
-# In[98]:
-
-
-log_report(X_train, y_train, 1)
 
 
 # In[ ]:
